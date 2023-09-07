@@ -3,6 +3,7 @@ FROM gcc:12.3.0-bookworm
 # Environment variables are handled in the docker-compose file. Otherwise, uncomment these:
 #ENV BROKER_URI=tcp://192.168.x.y:1883 \
 #    DEVICE_ID=IRsensor \
+#    USERNAME=device-iot \
 #    DEVICE_KEY=password
 
 RUN apt update && apt install -y libpaho-mqtt-dev && rm -rf /var/lib/apt/lists/*
