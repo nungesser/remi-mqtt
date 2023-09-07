@@ -1,5 +1,4 @@
 /*******************************************************************************
- * 2023. remi.leveque(α)pm.me
  * As this code is a derivative work from
  * https://github.com/eclipse/paho.mqtt.c/blob/master/src/samples/MQTTClient_publish_async.c
  * it is made available under the same license, which is:
