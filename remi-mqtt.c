@@ -1,8 +1,9 @@
 #include <stdio.h>
-
 #include <stdlib.h>
 #include <string.h>
 #include <MQTTClient.h>
+
+#include <unistd.h>
 
 #define DRIVER_FILE "/proc/my_echo"
 
@@ -16,7 +17,46 @@ char topic [100] = "default_device_id";
 MQTTClient                client;
 MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
 MQTTClient_message        pubmsg    = MQTTClient_message_initializer;
-MQTTClient_deliveryToken  token;
+MQTTClient_deliveryToken  deliveredtoken;
+
+int connectMQTTClient() {
+	int rc;
+	if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS)
+		printf("Failed to connect, return code %d\n", rc);  
+	return rc;
+}
+
+
+void delivered(void *context, MQTTClient_deliveryToken dt)
+{
+	printf("Message with token value %d delivery confirmed\n", dt);
+	deliveredtoken = dt;
+}
+
+int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message)
+{
+	// Should not be called as this is a pure publisher program.
+	printf("Message arrived\n");
+	printf("     topic: %s\n", topicName);
+	printf("   message: %.*s\n", message->payloadlen, (char*)message->payload);
+	MQTTClient_freeMessage(&message);
+	MQTTClient_free(topicName);
+	return 1;
+}
+
+void connlost(void *context, char *cause)
+{
+	printf("\nConnection lost\n");
+	printf("     cause: %s\n", cause);
+
+	// Let's try to reconnect
+	while (1) {
+	if ( connectMQTTClient() == MQTTCLIENT_SUCCESS )
+		break;
+	else
+		usleep(5000000L); // Wait 5s
+    }
+}
 
 
 int initMQTTClient(const char* addr, const char* id, const char* key) {
@@ -32,26 +72,38 @@ int initMQTTClient(const char* addr, const char* id, const char* key) {
 		return EXIT_FAILURE;
 	}
 
-	conn_opts.keepAliveInterval = 200;
+	if ((rc = MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered)) != MQTTCLIENT_SUCCESS)
+	{
+		printf("Failed to set callbacks, return code %d\n", rc);
+		goto destroy_exit;
+	}
+
+	conn_opts.keepAliveInterval = 20;
 	conn_opts.cleansession      = 1;
 	conn_opts.username          = USERNAME;
 	conn_opts.password          = key;
-	if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS)
-	{
-		printf("Failed to connect, return code %d\n", rc);
-		return EXIT_FAILURE;
-	}
+
+	if ((rc = connectMQTTClient() != MQTTCLIENT_SUCCESS) )
+		goto destroy_exit;
+
 
 	pubmsg.qos = QOS;
 	pubmsg.retained = 1;  //New mqtt client subscribers will immediattly get the current count.
-        
-	return (EXIT_SUCCESS);
+
+	return rc;
+
+destroy_exit:
+	MQTTClient_destroy(&client);
+	return EXIT_FAILURE;
 }
 
 int sendToMQTT(char* const myPayload) {
 
 	pubmsg.payload    = myPayload;
 	pubmsg.payloadlen = (int)strlen(myPayload);
+	deliveredtoken    = 0;
+
+	MQTTClient_deliveryToken token;
 
 	int rc;
 
@@ -62,17 +114,17 @@ int sendToMQTT(char* const myPayload) {
 		else
 			printf("Failed to publish message, return code %d\n", rc);
         
-		return EXIT_FAILURE;;
+		return EXIT_FAILURE;
 	}
 
-	printf("Publication of %s\n"
+	printf("Waiting for publication of %s\n"
 	       "on topic %s\n",
 	       (char*)pubmsg.payload, topic);
-	rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
-	if (rc == MQTTCLIENT_DISCONNECTED)
-		printf("Failed to publish, MQTTCLIENT_DISCONNECTED \n\n");
-	//printf("Message with delivery token %d delivered\n\n", token);
-    
+	while (deliveredtoken != token)
+	{
+		usleep(10000L);
+	}
+
 	printf("\n");
 	return EXIT_SUCCESS;
 }
@@ -85,7 +137,7 @@ int main(int argc, char* argv[]) {
 	if (BROKER_URI == NULL)
 		printf("BROKER_URI not in env\n");
 
-	const char* const DEVICE_ID = getenv ("DEVICE_ID");
+	const char* const DEVICE_ID  = getenv ("DEVICE_ID");
 	if (DEVICE_ID == NULL)
 		printf("DEVICE_ID  not in env\n");
 
@@ -115,6 +167,9 @@ int main(int argc, char* argv[]) {
 	char myPayload[100];
 	int  counter=0;
 
+	// reset remote counter value
+	sendToMQTT("{ \"type\": \"measure\",\"value\": { \"counter\": \"0\" }}");
+
 	// Read lines from the file forever
 	while(fgets(myLine, 100, fptr)) {
 		//printf("%s\n", myLine);
@@ -138,7 +193,8 @@ int main(int argc, char* argv[]) {
 	int rc;
 	// Disconnect from mqtt brocker
 	if ((rc = MQTTClient_disconnect(client, 10000)) != MQTTCLIENT_SUCCESS)
-	printf("Failed to disconnect, return code %d\n", rc);
+		printf("Failed to disconnect, return code %d\n", rc);
+
 	MQTTClient_destroy(&client);
 
 	// Close the file
