@@ -1,7 +1,7 @@
 FROM gcc:12.3.0-bookworm
 
 # Environment variables are handled in the docker-compose file. Otherwise, uncomment these:
-#ENV BROKER_URI=tcp://192.168.6.59:1883 \
+#ENV BROKER_URI=tcp://192.168.x.y:1883 \
 #    DEVICE_ID=IRsensor \
 #    DEVICE_KEY=password
 

@@ -5,7 +5,7 @@ services:
     image: debian-mqtt
     container_name: remi-ctn
     environment:
-      - BROKER_URI=tcp://192.168.5.66:1883
+      - BROKER_URI=tcp://192.168.x.y:1883
       - DEVICE_ID=IRsensor
       - USERNAME=device-iot
       - DEVICE_KEY=password
