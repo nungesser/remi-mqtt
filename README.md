@@ -223,8 +223,6 @@ To rebuild the image, you have first to stop and remove the container:
 
 
 ## TODO ##
-- Move the MQTT part of the app in a dedicated thread so the application could keep counting in case of network delay or issue.
 - Make the docker image lighter.
 - Check why the container takes time to stop.
-- Build for Rapsberry pi 4.
 - Use a json lib.

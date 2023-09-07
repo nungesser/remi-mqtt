@@ -2,15 +2,15 @@ BIN=remi-mqtt
 PAHO_LIB=-lpaho-mqtt3c
 
 # object file
-OBJ=$(BIN).o
+OBJS=$(BIN).o paho.o
 
 all: $(BIN)
 
-$(BIN):	$(OBJ)
-	$(CC) -o $(BIN) $(OBJ) $(PAHO_LIB)
+$(BIN):	$(OBJS)
+	$(CC) -o $(BIN) $(OBJS) $(PAHO_LIB)
 
 clean:
-	rm -rf $(OBJ) $(BIN)
+	rm -rf $(OBJS) $(BIN)
 
 DOCKER_IMG_NAME=debian-mqtt
 
