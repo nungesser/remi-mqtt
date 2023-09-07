@@ -204,7 +204,7 @@ The app is compilled during the docker build.
 ### How to use it ###
 
 To start the container:
-Edit the **docker-compose.yml** and set your own values to the env var **BROKER_URI**, **DEVICE_ID**, **DEVICE_KEY**.
+Edit the **docker-compose.yml** and set your own values to the env var **BROKER_URI**, **DEVICE_ID**, **USERNAME**,**DEVICE_KEY**.
 
 Start the container:
 ``` console
