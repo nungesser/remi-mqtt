@@ -100,9 +100,9 @@ You need to provide environments variable:
 
   * **BROKER_URI** (format: `tcp://<host>:<port>`) giving the address of the MQTT broker.
   * **DEVICE_ID**: device id
+  * **USERNAME**: the username used to connect on the MQTT brocker
   * **DEVICE_KEY**: the password
 
-NB: the username is currently embedded at the top of the remi-mqtt.c source file as device-iot.
 
 There is a **env.sh** file where you can set your variables, then source the file:
 ``` console

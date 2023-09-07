@@ -7,7 +7,7 @@
 
 #define DRIVER_FILE "/proc/my_echo"
 
-#define USERNAME    "device-iot"
+//#define USERNAME    "device-iot"
 
 #define QOS         1
 #define TIMEOUT     10000L // 10'000 ms
@@ -59,7 +59,7 @@ void connlost(void *context, char *cause)
 }
 
 
-int initMQTTClient(const char* addr, const char* id, const char* key) {
+int initMQTTClient(const char* addr, const char* id, const char* user, const char* key) {
 
 	sprintf(topic, "iot/dev/%s/data", id);
 
@@ -80,7 +80,7 @@ int initMQTTClient(const char* addr, const char* id, const char* key) {
 
 	conn_opts.keepAliveInterval = 20;
 	conn_opts.cleansession      = 1;
-	conn_opts.username          = USERNAME;
+	conn_opts.username          = user;
 	conn_opts.password          = key;
 
 	if ((rc = connectMQTTClient() != MQTTCLIENT_SUCCESS) )
@@ -141,15 +141,19 @@ int main(int argc, char* argv[]) {
 	if (DEVICE_ID == NULL)
 		printf("DEVICE_ID  not in env\n");
 
+	const char* const USERNAME   = getenv ("USERNAME");
+	if (USERNAME == NULL)
+		printf("USERNAME not in env\n");
+
 	const char* const DEVICE_KEY = getenv ("DEVICE_KEY");
 	if (DEVICE_KEY == NULL)
 		printf("DEVICE_KEY not in env\n");
 
-	if ( BROKER_URI == NULL || DEVICE_ID == NULL || DEVICE_KEY == NULL)
+	if ( BROKER_URI == NULL || DEVICE_ID == NULL || USERNAME == NULL || DEVICE_KEY == NULL)
 		exit(EXIT_FAILURE);
 
 	// Init our MQTT client
-	if ( initMQTTClient(BROKER_URI, DEVICE_ID, DEVICE_KEY) != EXIT_SUCCESS )
+	if ( initMQTTClient(BROKER_URI, DEVICE_ID, USERNAME, DEVICE_KEY) != EXIT_SUCCESS )
 		exit(EXIT_FAILURE);
 
 
