@@ -20,7 +20,7 @@ This is under the **echo-module** repository:
 
 On top of regular build env (gcc, make, ...) you will need the Linux headers of your machine.
 Depending on your machine it may look like one of these command to install them:
-``` bash
+``` console
  # apt install linux-headers-amd64
  # apt install linux-headers-generic
  # apt install linux-headers-generic-hwe-22.04
@@ -31,13 +31,13 @@ To get an idea of the package name you need, check the output of:
  $ uname -r
 ```
 If headers are there, the following command should return without error:
-``` bash
+``` console
  $ ls -l /lib/modules/`uname -r`/build
 lrwxrwxrwx 1 root root 39 juil. 13 15:22 /lib/modules/6.2.0-26-generic/build -> /usr/src/linux-headers-6.2.0-26-generic
 ```
 
 Then, you can go in **echo-module** folder and build the module: 
-``` bash
+``` console
  $ git clone https://github.com/nungesser/echo-module.git
  $ cd echo-module
  $ make
@@ -48,17 +48,17 @@ This will build the **my_echo.ko** kernel object (module).
 ### How to use it ###
 
 Check it's not already running:
-``` bash
+``` console
  $ lsmod | grep my_echo
 ```
 Load it:
-``` bash
+``` console
  # insmod my_echo.ko
 ```
 It should say Welcome in the kernel log. Check **dmesg**.
 
 At this point you should find the driver interface in /proc/ as my_echo.
-``` bash
+``` console
  $ ls -l /proc/my_echo
 -rw-rw-rw- 1 root root 0 août  28 11:22 /proc/my_echo
 ```
@@ -66,11 +66,11 @@ At this point you should find the driver interface in /proc/ as my_echo.
 Open 2 terminals:
 
   * In the first:
-```bash
+```console
  $ echo +1 > /proc/my_echo
 ```
   * In a 2nd one:
-``` bash
+``` console
  $ cat /proc/my_echo
 +1
 ```
@@ -80,7 +80,7 @@ NB: There is a 200ms wait timer. If too much data comming in within this amount 
 
 
 To unload the driver:
-``` bash
+``` console
  # rmmod my_echo
 ```
 
@@ -88,7 +88,7 @@ To unload the driver:
 ## Application layer ##
 
 The application sources are under the **remi-mqtt** [repository](https://github.com/nungesser/remi-mqtt.git) you read this file from.
-``` bash
+``` console
  $ cd remi-mqtt
 ```
 The application needs the **my_echo** module running on one side.
@@ -105,7 +105,7 @@ You need to provide environments variable:
 NB: the username is currently embedded at the top of the remi-mqtt.c source file as device-iot.
 
 There is a **env.sh** file where you can set your variables, then source the file:
-``` bash
+``` console
  $ source env.sh 
 ```
 The application will pubish the counter value on the following topic of the MQTT brocker:
@@ -116,11 +116,11 @@ iot/dev/${DEVICE_ID}/data
 ### How to build ###
 
 The application use a MQTT client library that needs to be installed
-```bash
+```console
  # apt install libpaho-mqtt-dev
 ```
 Then, run:
-``` bash
+``` console
  $ make
 ```
 This will build **remi-mqtt** bin
@@ -130,17 +130,17 @@ This will build **remi-mqtt** bin
 
 You need a MQTT brocker.
 Ex:
-``` bash
+``` console
  # apt install mosquitto
 ```
 This will install that MQTT brocker, available then on localhost.
 
 You would need a MQTT client comand to spy what's happening on the brocker.
-``` bash
+``` console
  # apt install mosquitto-clients
 ```
 To check what's up:
-``` bash
+``` console
  $ mosquitto_sub -h localhost -t iot/dev/# -v
  $ mosquitto_sub -h localhost -t iot/dev/# -u username -P password -v
 ```
@@ -153,14 +153,14 @@ You need the **my_echo** module loaded as described in the Low level layer part.
 
 In it's own terminal launch the app:
 
-``` bash
+``` console
  $ ./remi-mqtt
 ```
 
 In a 3rd terminal,
 
 write +1 values in the file interface of my_echo module:
-``` bash
+``` console
  $ echo +1 > /proc/my_echo
  $ echo +1 > /proc/my_echo
 ```
@@ -187,14 +187,14 @@ You will need a docker daemon installed.
 Have a look at [the official docker install page](https://docs.docker.com/engine/install/).
 
 Then, to be able to use the **docker-compose.yml** file, first:
-``` bash
+``` console
  # apt install docker-compose
 ```
 
 ### How to build the docker image ###
 
 To build a docker image that embeded the app:
-```
+``` console
  $ sudo make docker-build
 ```
 This will create and add locally a docker image called **debian-mqtt**.
@@ -207,17 +207,17 @@ To start the container:
 Edit the **docker-compose.yml** and set your own values to the env var **BROKER_URI**, **DEVICE_ID**, **DEVICE_KEY**.
 
 Start the container:
-``` bash
+``` console
  $ sudo docker-compose up -d
 ```
 Check it's running
-``` bash
+``` console
  $ sudo docker ps
 ```
 should show a **remi-ctn** container.
 
 To rebuild the image, you have first to stop and remove the container:
-``` bash
+``` console
  $ sudo docker-compose down
 ```
 
